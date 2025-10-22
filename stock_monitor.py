@@ -1,26 +1,71 @@
+# (所有 import 和函式 0, 1, 2, 3, 4 都和您剛剛測試的版本相同)
 import yfinance as yf
 import talib
 import sys
 import numpy as np
 import requests # 我們只需要 requests
 import os
-import pandas as pd # <--- 新增 Pandas (因為 yfinance 會回傳 Pandas 物件)
-from openai import OpenAI # <--- 新增 (AI)
+import pandas as pd
+from openai import OpenAI
+
+# ===============================================
+# 函式 0: 從檔案讀取股票清單
+# (與 v-config-file 本地版相同)
+# ===============================================
+def load_stock_list(filepath="stock_list.txt"):
+    """
+    從指定的文字檔讀取股票清單。
+    檔案格式: 名稱, 代號, K參數, D參數, D平滑參數 (以逗號分隔)
+    跳過 # 開頭的註解行和空行。
+    """
+    stock_list_from_file = []
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip() # 移除前後空白
+                if not line or line.startswith('#'):
+                    continue # 跳過空行或註解行
+                
+                parts = [part.strip() for part in line.split(',')]
+                if len(parts) == 5:
+                    try:
+                        name = parts[0]
+                        ticker = parts[1]
+                        # 將 KD 參數轉換為整數
+                        kd_params = (int(parts[2]), int(parts[3]), int(parts[4]))
+                        stock_list_from_file.append((name, ticker, kd_params))
+                    except ValueError:
+                        print(f"警告：無法解析行 '{line}' 中的 KD 參數，已跳過。")
+                    except Exception as e:
+                         print(f"警告：處理行 '{line}' 時發生錯誤: {e}，已跳過。")
+                else:
+                    print(f"警告：行 '{line}' 格式不正確 (需要 5 個欄位)，已跳過。")
+                    
+    except FileNotFoundError:
+        print(f"錯誤：找不到股票清單檔案 '{filepath}'。")
+        # 在 GitHub Actions 中，如果檔案不存在，可能是 checkout 步驟問題
+        print("請確保 stock_list.txt 檔案已上傳至 GitHub 儲存庫。")
+        sys.exit(1) # 如果找不到檔案，直接結束程式
+    except Exception as e:
+        print(f"讀取股票清單檔案 '{filepath}' 時發生嚴重錯誤: {e}")
+        sys.exit(1)
+        
+    if not stock_list_from_file:
+        print(f"錯誤：股票清單檔案 '{filepath}' 為空或無法解析任何有效資料。")
+        sys.exit(1)
+        
+    print(f"成功從 '{filepath}' 載入 {len(stock_list_from_file)} 支股票。")
+    return stock_list_from_file
 
 # ===============================================
 # 參數區 (Parameterization)
+# (與 v-config-file 本地版相同)
 # ===============================================
-STOCK_LIST = [
-    ("台積電", "2330.TW", (9, 3, 3)),
-    ("0050 ETF", "0050.TW", (9, 3, 3)),
-    ("Tesla", "TSLA", (14, 5, 5)), 
-    ("AMD", "AMD", (14, 5, 5)),
-    ("Intel", "INTC", (14, 5, 5)),
-    ("NVIDIA", "NVDA", (14, 5, 5))
-]
+STOCK_LIST = load_stock_list("stock_list.txt") 
 
 # ===============================================
-# 函式 1: 從「已下載的資料」中計算 KD 值
+# 函式 1: 計算 KD 值
+# (與 v-config-file 本地版相同)
 # ===============================================
 def calculate_kd_from_data(stock_name, high_series, low_series, close_series, kd_params):
     """
@@ -101,6 +146,7 @@ def calculate_kd_from_data(stock_name, high_series, low_series, close_series, kd
 
 # ===============================================
 # 函式 2: 發送 ntfy.sh 通知
+# (與 v-config-file 本地版相同)
 # ===============================================
 def send_ntfy_notification(topic, title, message):
     """
@@ -124,6 +170,7 @@ def send_ntfy_notification(topic, title, message):
 
 # ===============================================
 # 函式 3: 計算百分比變化字串
+# (與 v-config-file 本地版相同)
 # ===============================================
 def get_percent_change_str(current, previous):
     """
@@ -140,6 +187,7 @@ def get_percent_change_str(current, previous):
 
 # ===============================================
 # 函式 4: 呼叫 OpenAI 取得總結
+# (與 v-config-file 本地版相同)
 # ===============================================
 def get_ai_summary(api_key, context_data):
     """
@@ -184,7 +232,7 @@ def get_ai_summary(api_key, context_data):
         return None # 發生錯誤時回傳 None
 
 # ===============================================
-# --- 主程式入口 (v-ai-github-final 版) ---
+# --- 主程式入口 (v-config-file-github 版) ---
 # ===============================================
 def main():
     """
@@ -214,7 +262,8 @@ def main():
     stock_info = {} 
     ticker_list = [] 
     
-    for stock_name, ticker, kd_params in STOCK_LIST:
+    # 從載入的 STOCK_LIST 讀取 (保持不變)
+    for stock_name, ticker, kd_params in STOCK_LIST: 
         ticker_list.append(ticker)
         stock_info[ticker] = {"name": stock_name, "params": kd_params}
 
@@ -237,13 +286,29 @@ def main():
         
         # 1. 抓取該股票的資料
         if len(ticker_list) > 1:
-            high_series = all_data['High'][ticker]
-            low_series = all_data['Low'][ticker]
-            close_series = all_data['Close'][ticker]
-        else:
-            high_series = all_data['High']
-            low_series = all_data['Low']
-            close_series = all_data['Close']
+            try:
+                high_series = all_data['High'][ticker]
+                low_series = all_data['Low'][ticker]
+                close_series = all_data['Close'][ticker]
+            except KeyError:
+                print(f"警告：在下載的資料中找不到 {ticker} 的欄位，可能該股票代號有誤或今日無資料。跳過...")
+                report_header = f"📈 {stock_name} ({ticker})"
+                report_body = " (資料下載異常)"
+                block = f"{report_header}\n{report_body}"
+                final_report_blocks.append(block)
+                continue # 跳到下一支股票
+        else: # 如果只有一支股票
+            try:
+                high_series = all_data['High']
+                low_series = all_data['Low']
+                close_series = all_data['Close']
+            except KeyError:
+                print(f"警告：在下載的資料中找不到欄位，可能股票代號 {ticker} 有誤或今日無資料。跳過...")
+                report_header = f"📈 {stock_name} ({ticker})"
+                report_body = " (資料下載異常)"
+                block = f"{report_header}\n{report_body}"
+                final_report_blocks.append(block)
+                continue # 跳到下一支股票
             
         k, d, prev_k, prev_d, price, prev_price = calculate_kd_from_data(
             stock_name, high_series, low_series, close_series, kd_params
@@ -253,7 +318,7 @@ def main():
         if k is None:
             print(f"處理 {stock_name} 失敗，跳過。")
             report_header = f"📈 {stock_name} ({ticker})"
-            report_body = " (資料抓取失敗)"
+            report_body = " (計算失敗)"
             
         else:
             # 抓取成功，組合報告區塊
