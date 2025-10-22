@@ -2,3 +2,5 @@ numpy
 yfinance
 requests
 TA-Lib
+pandas
+openai
