@@ -2,8 +2,15 @@ name: KD Monitor
 
 on:
   workflow_dispatch:
+  
+  # === 這裡是關鍵修改 (1) ===
+  # 更新排程為每日兩次
   schedule:
+    # 台灣時間 10:00 AM (UTC 02:00), 週一到週五
     - cron: '0 2 * * 1-5'
+    # 台灣時間 10:00 PM (UTC 14:00), 週一到週五
+    - cron: '0 14 * * 1-5'
+  # =========================
 
 jobs:
   run-kd-monitor:
@@ -18,25 +25,17 @@ jobs:
         with:
           python-version: '3.10' 
 
-      # === 這裡是關鍵修正 ===
+      # (從原始碼編譯 TA-Lib 的步驟保持不變)
       - name: Install TA-Lib C-Library (from source)
         run: |
-          # 1. 安裝編譯所需的工具
           sudo apt-get update
           sudo apt-get install -y build-essential wget
-          
-          # 2. 下載 TA-Lib 原始碼
           wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-          
-          # 3. 解壓縮並進入資料夾
           tar -xzf ta-lib-0.4.0-src.tar.gz
           cd ta-lib/
-          
-          # 4. 編譯並安裝
           ./configure --prefix=/usr
           make
           sudo make install
-      # === 修正結束 ===
 
       - name: Install Python dependencies
         run: |
@@ -47,4 +46,8 @@ jobs:
         run: |
           python3 stock_monitor.py
         env:
+          # === Guan 鍵 這裡是關鍵修改 (2) ===
+          # 修正 09:25 的錯誤：加入 OPENAI_API_KEY
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # <--- 已新增
+          # ===============================
