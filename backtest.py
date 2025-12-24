@@ -32,23 +32,24 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
         trading_fee_rate = 0.005 # 0.5%
         sell_tax_rate = 0.0
 
+    slippage = 0.001 # 0.1% 滑價
+
     # Strategy A: Buy and Hold
     first_price = float(df['Close'].iloc[0])
     last_price = float(df['Close'].iloc[-1])
-    shares_a = (initial_capital / (1 + trading_fee_rate)) / first_price
-    final_a = shares_a * last_price
+    # 買入時考慮手續費與滑價
+    shares_a = (initial_capital / (1 + trading_fee_rate + slippage)) / first_price
+    # 期末清算考慮手續費、稅金與滑價
+    final_a = (shares_a * last_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
 
     # Strategy B: Trend Following (Dual Threshold)
     cap_b = initial_capital
-    shares_b = 0
-    in_pos_b = False
-    
-    price = float(df['Close'].iloc[0])
-    shares_b = (cap_b / (1 + trading_fee_rate)) / price
+    # 初始買入
+    shares_b = (cap_b / (1 + trading_fee_rate + slippage)) / first_price
     cap_b = 0
     in_pos_b = True
-    peak_price = price
-    valley_price = price
+    peak_price = first_price
+    valley_price = first_price
     
     history_b = []
     trans_b = 1
@@ -59,7 +60,7 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
             if current_price > peak_price: peak_price = current_price
             if current_price <= peak_price * (1 - sell_threshold):
                 sell_proceeds = shares_b * current_price
-                cap_b = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate)
+                cap_b = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate - slippage)
                 shares_b = 0
                 in_pos_b = False
                 valley_price = current_price
@@ -67,17 +68,27 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
         else:
             if current_price < valley_price: valley_price = current_price
             if current_price >= valley_price * (1 + buy_threshold):
-                cap_b = (cap_b / (1 + trading_fee_rate))
+                cap_b = (cap_b / (1 + trading_fee_rate + slippage))
                 shares_b = cap_b / current_price
                 cap_b = 0
                 in_pos_b = True
                 peak_price = current_price
                 trans_b += 1
-        history_b.append(cap_b + (shares_b * current_price))
+        
+        # 紀錄歷史價值 (若持有中，紀錄扣除預期清算後的價值，讓圖表呈現的是「實拿」價值)
+        current_val = cap_b
+        if in_pos_b:
+            current_val = (shares_b * current_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
+        history_b.append(current_val)
+
+    # 期末清算
+    final_val_b = cap_b
+    if in_pos_b:
+        final_val_b = (shares_b * last_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
 
     return {
         'final_a': final_a,
-        'final_b': cap_b + (shares_b * last_price),
+        'final_b': final_val_b,
         'trans_b': trans_b,
         'history_b': history_b,
         'market': '台股' if is_taiwan else '美股/複委託',
