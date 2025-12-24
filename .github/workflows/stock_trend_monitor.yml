@@ -13,7 +13,7 @@ on:
   # =========================
 
 jobs:
-  run-kd-monitor:
+  run-stock-trend-monitor:
     runs-on: ubuntu-latest
     
     steps:
@@ -30,7 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run KD Monitor script
+      - name: Run Stock Trend Monitor script
         run: |
           python3 stock_monitor.py
         env:
