@@ -77,37 +77,82 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
     cap_c = initial_capital
     shares_c = 0
     in_pos_c = False
-    
-    last_trans_day = -999 # 紀錄上次交易的天數索引
+    last_trans_day_c = -999
     history_c = []
     trans_c = 0
     
-    # 為了對齊索引，我們使用 enumerate
     for i, (idx, row) in enumerate(df_c.iterrows()):
         current_price = float(row['Close'])
         current_sma = float(row['SMA20'])
-        
         if pd.isna(current_sma):
             pass
         else:
-            # 判斷是否過了大於等於3天的冷卻期 (i - last_trans_day >= 3)
-            if (i - last_trans_day) >= 3:
+            if (i - last_trans_day_c) >= 3:
                 if current_price > current_sma and not in_pos_c:
                     cap_c = (cap_c / (1 + trading_fee_rate))
                     shares_c = cap_c / current_price
                     cap_c = 0
                     in_pos_c = True
                     trans_c += 1
-                    last_trans_day = i
+                    last_trans_day_c = i
                 elif current_price < current_sma and in_pos_c:
                     sell_proceeds = shares_c * current_price
                     cap_c = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate)
                     shares_c = 0
                     in_pos_c = False
                     trans_c += 1
-                    last_trans_day = i
-                
+                    last_trans_day_c = i
         history_c.append(cap_c + (shares_c * current_price))
+
+    # Strategy D: ATR Adaptive Volatility
+    df_d = df.copy()
+    # ATR Calculation (14 days)
+    high_low = df_d['High'] - df_d['Low']
+    high_close = (df_d['High'] - df_d['Close'].shift()).abs()
+    low_close = (df_d['Low'] - df_d['Close'].shift()).abs()
+    ranges = pd.concat([high_low, high_close, low_close], axis=1)
+    true_range = ranges.max(axis=1)
+    df_d['ATR'] = true_range.rolling(14).mean()
+    
+    cap_d = initial_capital
+    shares_d = (cap_d / (1 + trading_fee_rate)) / first_price
+    cap_d = 0
+    in_pos_d = True
+    peak_price = first_price
+    valley_price = first_price
+    
+    history_d = []
+    trans_d = 1
+    multiplier = 3.0 # ATR Multiplier
+    
+    for i, (idx, row) in enumerate(df_d.iterrows()):
+        current_price = float(row['Close'])
+        current_atr = float(row['ATR'])
+        
+        if pd.isna(current_atr):
+            pass
+        else:
+            dynamic_t = (current_atr * multiplier) / current_price
+            
+            if in_pos_d:
+                if current_price > peak_price: peak_price = current_price
+                if current_price <= peak_price * (1 - dynamic_t):
+                    sell_proceeds = shares_d * current_price
+                    cap_d = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate)
+                    shares_d = 0
+                    in_pos_d = False
+                    valley_price = current_price
+                    trans_d += 1
+            else:
+                if current_price < valley_price: valley_price = current_price
+                if current_price >= valley_price * (1 + dynamic_t):
+                    cap_d = (cap_d / (1 + trading_fee_rate))
+                    shares_d = cap_d / current_price
+                    cap_d = 0
+                    in_pos_d = True
+                    peak_price = current_price
+                    trans_d += 1
+        history_d.append(cap_d + (shares_d * current_price))
 
     return {
         'final_a': final_a,
@@ -117,6 +162,9 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
         'final_c': cap_c + (shares_c * last_price),
         'trans_c': trans_c,
         'history_c': history_c,
+        'final_d': cap_d + (shares_d * last_price),
+        'trans_d': trans_d,
+        'history_d': history_d,
         'market': '台股' if is_taiwan else '美股/複委託',
         'fee': trading_fee_rate,
         'tax': sell_tax_rate
@@ -263,9 +311,13 @@ def main():
         res_c = run_backtest(df, stock_code=stock)
         roi_c = (res_c['final_c']/10000 - 1) * 100
         
+        res_d = run_backtest(df, stock_code=stock)
+        roi_d = (res_d['final_d']/10000 - 1) * 100
+        
         print("\n獲利矩陣 (獲利高原分析):")
         print(f"基準對照 Strategy A (長期持有): {roi_a:.1f}%")
         print(f"對手策略 Strategy C (月線趨勢): {roi_c:.1f}%")
+        print(f"自適應策略 Strategy D (ATR 3.0): {roi_d:.1f}%")
         print(matrix_divider)
         print(matrix_header)
         print(matrix_divider)
@@ -297,6 +349,7 @@ def main():
         print("-" * 50)
         print(f"數字 A (存股持有): ${res['final_a']:.2f} ({(res['final_a']/10000-1)*100:.1f}%)")
         print(f"數字 C (月線策略): ${res['final_c']:.2f} ({(res['final_c']/10000-1)*100:.1f}%) | 交易 {res['trans_c']} 次")
+        print(f"數字 D (自適應策): ${res['final_d']:.2f} ({(res['final_d']/10000-1)*100:.1f}%) | 交易 {res['trans_d']} 次")
         print(f"數字 B (趨勢策略): ${res['final_b']:.2f} ({(res['final_b']/10000-1)*100:.1f}%) | 交易 {res['trans_b']} 次")
         print("-" * 50)
 
@@ -304,6 +357,7 @@ def main():
         first_price_val = float(df['Close'].iloc[0])
         plt.plot(df.index, (10000/first_price_val) * df['Close'], label='Strategy A (Hold)', alpha=0.5)
         plt.plot(df.index, res['history_c'], label='Strategy C (SMA20)', linestyle='--')
+        plt.plot(df.index, res['history_d'], label='Strategy D (ATR)', linestyle='-.')
         plt.plot(df.index, res['history_b'], label=f'Strategy B ({args.buy_t*100:.0f}%/{args.sell_t*100:.0f}%)')
         plt.title(f"Backtest: {stock} ({res['market']})")
         plt.legend()
