@@ -4,3 +4,4 @@ __pycache__/
 backtest_result.png
 *.pyc
 .DS_Store
+stock_list.txt

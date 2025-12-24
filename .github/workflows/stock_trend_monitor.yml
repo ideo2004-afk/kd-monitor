@@ -34,6 +34,5 @@ jobs:
         run: |
           python3 stock_monitor.py
         env:
-          # === Guan 鍵 這裡是關鍵修改 (2) ===
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-          # ===============================
+          STOCK_CONFIG_JSON: ${{ secrets.STOCK_CONFIG_JSON }}
