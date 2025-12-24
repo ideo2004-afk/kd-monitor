@@ -1,12 +1,9 @@
-# (所有 import 和函式 0, 1, 2, 3, 4 都和您剛剛測試的版本相同)
 import yfinance as yf
-import talib
 import sys
 import numpy as np
 import requests # 我們只需要 requests
 import os
 import pandas as pd
-from openai import OpenAI
 
 # ===============================================
 # 函式 0: 從檔案讀取股票清單
@@ -59,23 +56,24 @@ def load_stock_list(filepath="stock_list.txt"):
 
 # ===============================================
 # 參數區 (Parameterization)
-# (與 v-config-file 本地版相同)
 # ===============================================
 STOCK_LIST = load_stock_list("stock_list.txt") 
 
 # ===============================================
-# 函式 1: 計算 KD 值
-# (與 v-config-file 本地版相同)
+# 函式 1: 計算 KD 值 (手動計算，不需 TA-Lib)
 # ===============================================
 def calculate_kd_from_data(stock_name, high_series, low_series, close_series, kd_params):
     """
     從「已傳入」的 Pandas Series 資料中計算 KD 值
-    (這個函式「不會」執行網路下載)
+    採用標準公式:
+    RSV = (今日收盤價 - 最近 N 天最低價) / (最近 N 天最高價 - 最近 N 天最低價) * 100
+    K = (1/3) * RSV + (2/3) * 前一日 K
+    D = (1/3) * 今日 K + (2/3) * 前一日 D
     """
     print(f"--- 正在計算: {stock_name} ({kd_params}) ---")
     
     # 解開參數
-    fastk, slowk, slowd = kd_params
+    n_days, k_smooth, d_smooth = kd_params
     
     try:
         # 1. 組合並清理資料
@@ -89,147 +87,52 @@ def calculate_kd_from_data(stock_name, high_series, low_series, close_series, kd
             print(f"錯誤：{stock_name} 清理 NaN 後資料為空。")
             return (None,) * 6 # 回傳 6 個 None
             
-        required_lookback = 20 
-        
-        if len(data) < required_lookback or len(data) < 3: 
+        if len(data) < n_days: 
             print(f"錯誤：{stock_name} 資料筆數不足 ({len(data)} 筆)，無法計算 KD。")
             return (None,) * 6
             
-        # 2. 準備陣列
-        high = data['High'].to_numpy(dtype=float).ravel()
-        low = data['Low'].to_numpy(dtype=float).ravel()
-        close = data['Close'].to_numpy(dtype=float).ravel()
+        # 2. 計算 RSV
+        # 最近 n_days 天的最低價
+        low_min = data['Low'].rolling(window=n_days).min()
+        # 最近 n_days 天的最高價
+        high_max = data['High'].rolling(window=n_days).max()
         
-        # 3. 計算 KD 值
-        k_values, d_values = talib.STOCH(high, low, close,
-                                         fastk_period=fastk,
-                                         slowk_period=slowk,
-                                         slowk_matype=0,
-                                         slowd_period=slowd,
-                                         slowd_matype=0)
+        # RSV (Raw Stochastic Value)
+        rsv = (data['Close'] - low_min) / (high_max - low_min) * 100
+        rsv = rsv.fillna(50) # 初期值填充
+
+        # 3. 計算 K, D
+        k_values = [50.0]
+        d_values = [50.0]
         
-        if len(k_values) < 2 or len(close) < 2:
-            print(f"錯誤：{stock_name} 計算出的序列長度不足 2，無法比較趨勢。")
-            return (None,) * 6
+        # 平滑係數
+        k_weight = 1.0 / k_smooth
+        d_weight = 1.0 / d_smooth
+        
+        # 逐日計算 (雖然有效率較低的方法，但程式碼較直觀)
+        # 我們只需要最近幾個值，所以從 RSV 開始計算
+        rsv_list = rsv.tolist()
+        for i in range(1, len(rsv_list)):
+            current_k = (k_weight * rsv_list[i]) + ((1 - k_weight) * k_values[-1])
+            k_values.append(current_k)
             
+            current_d = (d_weight * current_k) + ((1 - d_weight) * d_values[-1])
+            d_values.append(current_d)
+        
         # 4. 獲取資料
         latest_k = k_values[-1] 
         latest_d = d_values[-1]
         prev_k = k_values[-2]   
         prev_d = d_values[-2]
-        latest_price = close[-1] 
-        prev_price = close[-2]   
+        latest_price = data['Close'].iloc[-1]
+        prev_price = data['Close'].iloc[-2]
         
-        # 5. 處理 NaN
-        if np.isnan(latest_k) or np.isnan(latest_d):
-            print(f"警告：{stock_name} 計算出的最新值為 NaN。嘗試抓取前一日的資料...")
-            if len(k_values) > 2 and len(close) > 2: 
-                latest_k = k_values[-2]
-                latest_d = d_values[-2]
-                prev_k = k_values[-3]   
-                prev_d = d_values[-3]
-                latest_price = close[-2] 
-                prev_price = close[-3]   
-                if np.isnan(latest_k):
-                     print(f"錯誤：{stock_name} 前一日資料仍為 NaN，放棄。")
-                     return (None,) * 6
-            else:
-                print(f"錯誤：{stock_name} 資料長度不足，無法抓取前一日資料。")
-                return (None,) * 6
-
         # 6. 回傳 6 個值
         return latest_k, latest_d, prev_k, prev_d, latest_price, prev_price
 
     except Exception as e:
         print(f"計算 {stock_name} 時發生錯誤: {e}")
         return (None,) * 6
-
-# ===============================================
-# 函式 2: 發送 ntfy.sh 通知
-# (與 v-config-file 本地版相同)
-# ===============================================
-def send_ntfy_notification(topic, title, message):
-    """
-    發送通知到 ntfy.sh
-    """
-    print(f"\n正在發送 ntfy.sh 通知到主題: {topic}")
-    try:
-        response = requests.post(
-            f"https://ntfy.sh/{topic}",
-            data=message.encode('utf-8'), # 訊息本文，需編碼
-            headers={
-                "Title": title.encode('utf-8'), # 標題，也需編碼
-                "Priority": "high", # 設置高優先級 (可選)
-                "Tags": "chart_with_upwards_trend" # 顯示 📈 圖示 (可選)
-            }
-        )
-        response.raise_for_status() # 檢查是否有 HTTP 錯誤
-        print("ntfy 通知發送成功！")
-    except requests.exceptions.RequestException as e:
-        print(f"發送 ntfy 通知時發生錯誤: {e}")
-
-# ===============================================
-# 函式 3: 計算百分比變化字串
-# (與 v-config-file 本地版相同)
-# ===============================================
-def get_percent_change_str(current, previous):
-    """
-    計算目前值與前一值的百分比變化，並回傳格式化字串
-    """
-    if previous == 0 or previous is None or current is None:
-        return " (N/A)" # 避免除以零或 None
-    
-    # 計算百分比
-    percent = ((current - previous) / abs(previous)) * 100
-    
-    # 格式化字串
-    return f" {percent:+.1f}%"
-
-# ===============================================
-# 函式 4: 呼叫 OpenAI 取得總結
-# (與 v-config-file 本地版相同)
-# ===============================================
-def get_ai_summary(api_key, context_data):
-    """
-    將彙整的資料發送給 OpenAI 並取得總結
-    """
-    print("\n--- 正在呼叫 OpenAI 進行總結 ---")
-    
-    try:
-        client = OpenAI(api_key=api_key)
-        
-        # 組合 Prompt
-        prompt = f"""
-        請扮演一位專業、言簡意賅的金融市場分析師。
-        我將提供一份包含台股（盤中即時）和美股（前日收盤）的市場數據摘要。
-        請您根據這份數據，提供一段約 100 字的「市場動態總結」。
-        
-        您的總結應包含：
-        1. 快速點出台股（台積電, 0050）的目前走勢（例如：盤中強勢、盤整）。
-        2. 點出美股科技股（TSLA, AMD, NVDA, INTC）的收盤狀況（例如：普遍強勢、漲跌互見）。
-        3. 點出任何顯著的警示信號（例如：XXX 進入超買區）。
-        
-        請使用繁體中文，語氣專業。
-
-        [原始數據]
-        {context_data}
-        """
-        
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini", # 使用最新、速度快且成本效益高的模型
-            messages=[
-                {"role": "system", "content": "你是一位專業、言簡意賅的金融市場分析師。"},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        
-        summary = completion.choices[0].message.content
-        print("AI 總結獲取成功。")
-        return summary
-        
-    except Exception as e:
-        print(f"呼叫 OpenAI API 時發生錯誤: {e}")
-        return None # 發生錯誤時回傳 None
 
 # ===============================================
 # --- 主程式入口 (v-config-file-github 版) ---
@@ -241,12 +144,11 @@ def main():
     # === 這裡是關鍵修改 (GitHub 版) ===
     # --- 步驟 1: 從 GitHub Secrets 讀取 API Keys ---
     NTFY_TOPIC = os.getenv("NTFY_TOPIC")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     
-    if not NTFY_TOPIC or not OPENAI_API_KEY:
+    if not NTFY_TOPIC:
         print("="*50)
-        print("錯誤：找不到 NTFY_TOPIC 或 OPENAI_API_KEY 環境變數。")
-        print("請確保您已在 GitHub Secrets 中設定這兩個值。")
+        print("錯誤：找不到 NTFY_TOPIC 環境變數。")
+        print("請確保您已在 GitHub Secrets 中設定此變數。")
         print("="*50)
         sys.exit(1)
     # =====================================
@@ -354,32 +256,13 @@ def main():
         )
         final_report_blocks.append(block)
 
-    # --- 步驟 4: 呼叫 AI 進行總結 ---
-    ai_context = "\n\n".join(final_report_blocks) 
-    ai_summary = get_ai_summary(OPENAI_API_KEY, ai_context)
-
     # --- 步驟 5: 組合並發送最終報告 ---
     if not final_report_blocks:
         print("沒有任何股票資料被處理，任務結束。")
     else:
         # 組合數據報告
         data_report = "\n\n".join(final_report_blocks)
-        
-        if ai_summary:
-            final_message = (
-                f"🧠 **AI 市場總結**\n"
-                f"{ai_summary}\n"
-                f"\n"
-                f"—————\n"
-                f"**詳細數據**\n"
-                f"—————\n"
-                f"{data_report}"
-            )
-        else:
-            print("AI 總結失敗，僅發送原始數據。")
-            final_message = data_report
-        
-        send_ntfy_notification(NTFY_TOPIC, report_title, final_message)
+        send_ntfy_notification(NTFY_TOPIC, report_title, data_report)
     
     print("\n--- 任務完成 ---")
 
