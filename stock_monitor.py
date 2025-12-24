@@ -12,46 +12,36 @@ import pandas as pd
 def load_stock_list(filepath="stock_list.txt"):
     """
     從指定的文字檔讀取股票清單。
-    檔案格式: 名稱, 代號, K參數, D參數, D平滑參數 (以逗號分隔)
-    跳過 # 開頭的註解行和空行。
+    檔案格式: 名稱, 代號, 跌幅閾值, 回補閾值 (以逗號分隔)
     """
     stock_list_from_file = []
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             for line in f:
-                line = line.strip() # 移除前後空白
+                line = line.strip()
                 if not line or line.startswith('#'):
-                    continue # 跳過空行或註解行
+                    continue
                 
                 parts = [part.strip() for part in line.split(',')]
-                if len(parts) == 5:
+                if len(parts) == 4:
                     try:
                         name = parts[0]
                         ticker = parts[1]
-                        # 將 KD 參數轉換為整數
-                        kd_params = (int(parts[2]), int(parts[3]), int(parts[4]))
-                        stock_list_from_file.append((name, ticker, kd_params))
+                        # 跌幅與回補閾值
+                        thresholds = (float(parts[2]), float(parts[3]))
+                        stock_list_from_file.append((name, ticker, thresholds))
                     except ValueError:
-                        print(f"警告：無法解析行 '{line}' 中的 KD 參數，已跳過。")
-                    except Exception as e:
-                         print(f"警告：處理行 '{line}' 時發生錯誤: {e}，已跳過。")
+                        print(f"警告：無法解析行 '{line}' 中的閾值，已跳過。")
                 else:
-                    print(f"警告：行 '{line}' 格式不正確 (需要 5 個欄位)，已跳過。")
+                    print(f"警告：行 '{line}' 格式不正確 (需要 4 個欄位)，已跳過。")
                     
     except FileNotFoundError:
         print(f"錯誤：找不到股票清單檔案 '{filepath}'。")
-        # 在 GitHub Actions 中，如果檔案不存在，可能是 checkout 步驟問題
-        print("請確保 stock_list.txt 檔案已上傳至 GitHub 儲存庫。")
-        sys.exit(1) # 如果找不到檔案，直接結束程式
+        sys.exit(1)
     except Exception as e:
-        print(f"讀取股票清單檔案 '{filepath}' 時發生嚴重錯誤: {e}")
+        print(f"嚴重錯誤: {e}")
         sys.exit(1)
         
-    if not stock_list_from_file:
-        print(f"錯誤：股票清單檔案 '{filepath}' 為空或無法解析任何有效資料。")
-        sys.exit(1)
-        
-    print(f"成功從 '{filepath}' 載入 {len(stock_list_from_file)} 支股票。")
     return stock_list_from_file
 
 # ===============================================
@@ -60,79 +50,49 @@ def load_stock_list(filepath="stock_list.txt"):
 STOCK_LIST = load_stock_list("stock_list.txt") 
 
 # ===============================================
-# 函式 1: 計算 KD 值 (手動計算，不需 TA-Lib)
+# 函式 1: 計算動態趨勢 (跌幅與回補)
 # ===============================================
-def calculate_kd_from_data(stock_name, high_series, low_series, close_series, kd_params):
+def calculate_dynamic_trends(stock_name, data, drop_threshold, recovery_threshold):
     """
-    從「已傳入」的 Pandas Series 資料中計算 KD 值
-    採用標準公式:
-    RSV = (今日收盤價 - 最近 N 天最低價) / (最近 N 天最高價 - 最近 N 天最低價) * 100
-    K = (1/3) * RSV + (2/3) * 前一日 K
-    D = (1/3) * 今日 K + (2/3) * 前一日 D
+    計算目前價格相對於近期高點的跌幅，以及相對於近期低點的回補程度。
+    回傳: (目前價格, 漲跌幅, 距高點跌幅, 距低點回補)
     """
-    print(f"--- 正在計算: {stock_name} ({kd_params}) ---")
-    
-    # 解開參數
-    n_days, k_smooth, d_smooth = kd_params
+    print(f"--- 正在計算: {stock_name} (閾值: {drop_threshold}%, {recovery_threshold}%) ---")
     
     try:
-        # 1. 組合並清理資料
-        data = pd.DataFrame({
-            'High': high_series, 
-            'Low': low_series, 
-            'Close': close_series
-        }).dropna()
-
-        if data.empty:
-            print(f"錯誤：{stock_name} 清理 NaN 後資料為空。")
-            return (None,) * 6 # 回傳 6 個 None
+        if data.empty or len(data) < 2:
+            return None
             
-        if len(data) < n_days: 
-            print(f"錯誤：{stock_name} 資料筆數不足 ({len(data)} 筆)，無法計算 KD。")
-            return (None,) * 6
-            
-        # 2. 計算 RSV
-        # 最近 n_days 天的最低價
-        low_min = data['Low'].rolling(window=n_days).min()
-        # 最近 n_days 天的最高價
-        high_max = data['High'].rolling(window=n_days).max()
+        # 使用最近 30 筆資料作為觀察期
+        lookback_period = data.tail(30)
         
-        # RSV (Raw Stochastic Value)
-        rsv = (data['Close'] - low_min) / (high_max - low_min) * 100
-        rsv = rsv.fillna(50) # 初期值填充
-
-        # 3. 計算 K, D
-        k_values = [50.0]
-        d_values = [50.0]
+        peak_price = lookback_period['High'].max()
+        valley_price = lookback_period['Low'].min()
         
-        # 平滑係數
-        k_weight = 1.0 / k_smooth
-        d_weight = 1.0 / d_smooth
-        
-        # 逐日計算 (雖然有效率較低的方法，但程式碼較直觀)
-        # 我們只需要最近幾個值，所以從 RSV 開始計算
-        rsv_list = rsv.tolist()
-        for i in range(1, len(rsv_list)):
-            current_k = (k_weight * rsv_list[i]) + ((1 - k_weight) * k_values[-1])
-            k_values.append(current_k)
-            
-            current_d = (d_weight * current_k) + ((1 - d_weight) * d_values[-1])
-            d_values.append(current_d)
-        
-        # 4. 獲取資料
-        latest_k = k_values[-1] 
-        latest_d = d_values[-1]
-        prev_k = k_values[-2]   
-        prev_d = d_values[-2]
         latest_price = data['Close'].iloc[-1]
         prev_price = data['Close'].iloc[-2]
         
-        # 6. 回傳 6 個值
-        return latest_k, latest_d, prev_k, prev_d, latest_price, prev_price
+        # 1. 當日漲跌幅
+        daily_change = ((latest_price - prev_price) / prev_price) * 100
+        
+        # 2. 距高點跌幅 (Drop from Peak)
+        drop_from_peak = ((latest_price - peak_price) / peak_price) * 100
+        
+        # 3. 距低點回補 (Recovery from Valley)
+        recovery_from_valley = ((latest_price - valley_price) / valley_price) * 100
+        
+        return {
+            "price": latest_price,
+            "daily_change": daily_change,
+            "peak": peak_price,
+            "valley": valley_price,
+            "drop": drop_from_peak,
+            "recovery": recovery_from_valley
+        }
 
     except Exception as e:
         print(f"計算 {stock_name} 時發生錯誤: {e}")
-        return (None,) * 6
+        return None
 
 # ===============================================
 # --- 主程式入口 (v-config-file-github 版) ---
@@ -184,77 +144,47 @@ def main():
     for ticker in ticker_list:
         
         stock_name = stock_info[ticker]["name"]
-        kd_params = stock_info[ticker]["params"]
+        drop_thr, rec_thr = stock_info[ticker]["params"]
         
         # 1. 抓取該股票的資料
-        if len(ticker_list) > 1:
-            try:
-                high_series = all_data['High'][ticker]
-                low_series = all_data['Low'][ticker]
-                close_series = all_data['Close'][ticker]
-            except KeyError:
-                print(f"警告：在下載的資料中找不到 {ticker} 的欄位，可能該股票代號有誤或今日無資料。跳過...")
-                report_header = f"📈 {stock_name} ({ticker})"
-                report_body = " (資料下載異常)"
-                block = f"{report_header}\n{report_body}"
-                final_report_blocks.append(block)
-                continue # 跳到下一支股票
-        else: # 如果只有一支股票
-            try:
-                high_series = all_data['High']
-                low_series = all_data['Low']
-                close_series = all_data['Close']
-            except KeyError:
-                print(f"警告：在下載的資料中找不到欄位，可能股票代號 {ticker} 有誤或今日無資料。跳過...")
-                report_header = f"📈 {stock_name} ({ticker})"
-                report_body = " (資料下載異常)"
-                block = f"{report_header}\n{report_body}"
-                final_report_blocks.append(block)
-                continue # 跳到下一支股票
+        try:
+            if len(ticker_list) > 1:
+                # 多支股票時 yf.download 會回傳 MultiIndex
+                stock_data = pd.DataFrame({
+                    'High': all_data['High'][ticker],
+                    'Low': all_data['Low'][ticker],
+                    'Close': all_data['Close'][ticker]
+                })
+            else:
+                stock_data = all_data[['High', 'Low', 'Close']]
+        except KeyError:
+            print(f"警告：找不到 {ticker} 資料。")
+            final_report_blocks.append(f"📈 {stock_name} ({ticker})\n (資料下載異常)")
+            continue
             
-        k, d, prev_k, prev_d, price, prev_price = calculate_kd_from_data(
-            stock_name, high_series, low_series, close_series, kd_params
-        )
+        res = calculate_dynamic_trends(stock_name, stock_data, drop_thr, rec_thr)
         
-        # 2. 檢查資料是否抓取成功
-        if k is None:
-            print(f"處理 {stock_name} 失敗，跳過。")
-            report_header = f"📈 {stock_name} ({ticker})"
-            report_body = " (計算失敗)"
-            
+        if res is None:
+            final_report_blocks.append(f"📈 {stock_name} ({ticker})\n (計算失敗)")
         else:
-            # 抓取成功，組合報告區塊
-            print(f"處理 {stock_name} 成功。")
+            # 組合報告區塊
             report_header = f"📈 {stock_name} ({ticker})"
             
-            price_change = get_percent_change_str(price, prev_price)
-            k_change = get_percent_change_str(k, prev_k)
-            d_change = get_percent_change_str(d, prev_d)
-            
-            k_str = f"K值：{k:.2f}{k_change}"
-            if k > 80:
-                k_str += " ⚠️(超買)"
-            elif k < 20:
-                k_str += " 🟢(超賣)"
+            # 狀態標記
+            alert_str = ""
+            if res["drop"] <= -drop_thr:
+                alert_str += f" ⚠️跌幅達標({res['drop']:.1f}%)"
+            if res["recovery"] >= rec_thr:
+                alert_str += f" 🟢回補達標({res['recovery']:.1f}%)"
                 
-            d_str = f"D值：{d:.2f}{d_change}"
-            if d > 80:
-                d_str += " ⚠️"
-            elif d < 20:
-                d_str += " 🟢"
-            
             report_body = (
-                f"價格：{price:,.2f}{price_change}\n" 
-                f"{k_str}\n" 
-                f"{d_str}"
+                f"價格：{res['price']:,.2f} ({res['daily_change']:+.1f}%)\n"
+                f"近期高點：{res['peak']:,.2f} (距高點 {res['drop']:.1f}%)\n"
+                f"近期低點：{res['valley']:,.2f} (距低點 {res['recovery']:+.1f}%)\n"
+                f"狀態：{alert_str if alert_str else '正常'}"
             )
-        
-        # 3. 組合區塊
-        block = (
-            f"{report_header}\n"
-            f"{report_body}"
-        )
-        final_report_blocks.append(block)
+            
+            final_report_blocks.append(f"{report_header}\n{report_body}")
 
     # --- 步驟 5: 組合並發送最終報告 ---
     if not final_report_blocks:

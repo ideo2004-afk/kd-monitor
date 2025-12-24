@@ -1,4 +1,4 @@
-name: KD Monitor
+name: Stock Trend Monitor
 
 on:
   workflow_dispatch:
