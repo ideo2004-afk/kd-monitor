@@ -220,7 +220,7 @@ def main():
             for st in thresholds:
                 res = run_backtest(df, stock_code=stock, buy_threshold=bt, sell_threshold=st)
                 roi = (res['final_b']/10000 - 1) * 100
-                matrix_data[bt][st] = roi
+                matrix_data[bt][st] = (roi, res['trans_b'])
                 if roi > best_roi_b:
                     best_roi_b = roi
                     best_buy_t = bt
@@ -230,11 +230,11 @@ def main():
         roi_a = (res_a['final_a']/10000 - 1) * 100
 
         # Construct Matrix Text for AI
-        matrix_header = "買\\賣 | " + " | ".join([f"{t*100:>3.0f}%" for t in thresholds])
-        matrix_divider = "-" * (8 + len(thresholds)*7)
+        matrix_header = "買\\賣 | " + " | ".join([f"{t*100:>7.0f}%" for t in thresholds])
+        matrix_divider = "-" * (8 + len(thresholds)*11)
         matrix_text = matrix_header + "\n" + matrix_divider + "\n"
         
-        print("\n獲利矩陣 (獲利高原分析):")
+        print("\n獲利矩陣 (獲利高原分析) [格式: 報酬%(交易次數)]:")
         print(f"基準對照 Strategy A (長期持有): {roi_a:.1f}%")
         print(matrix_divider)
         print(matrix_header)
@@ -243,9 +243,10 @@ def main():
         for bt in thresholds:
             row_str = f"{bt*100:>3.0f}%  | "
             for st in thresholds:
-                val = matrix_data[bt][st]
+                val, trans = matrix_data[bt][st]
                 mark = "*" if val > roi_a else " "
-                row_str += f"{val:>4.0f}%{mark}| "
+                cell = f"{val:>3.0f}%({trans:>2}){mark}"
+                row_str += f"{cell:<8}| "
             print(row_str)
             matrix_text += row_str + "\n"
         

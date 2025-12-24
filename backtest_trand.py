@@ -32,15 +32,20 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
         trading_fee_rate = 0.005 # 0.5%
         sell_tax_rate = 0.0
 
+    slippage = 0.001 # 0.1% 滑價
+
     # Strategy A: Buy and Hold
     first_price = float(df['Close'].iloc[0])
     last_price = float(df['Close'].iloc[-1])
-    shares_a = (initial_capital / (1 + trading_fee_rate)) / first_price
-    final_a = shares_a * last_price
+    # 買入時考慮手續費與滑價
+    shares_a = (initial_capital / (1 + trading_fee_rate + slippage)) / first_price
+    # 期末清算考慮手續費與稅金
+    final_a = (shares_a * last_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
 
     # Strategy B: Trend Following (Dual Threshold)
     cap_b = initial_capital
-    shares_b = (cap_b / (1 + trading_fee_rate)) / first_price
+    # 初始買入
+    shares_b = (cap_b / (1 + trading_fee_rate + slippage)) / first_price
     cap_b = 0
     in_pos_b = True
     peak_price = first_price
@@ -55,7 +60,7 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
             if current_price > peak_price: peak_price = current_price
             if current_price <= peak_price * (1 - sell_threshold):
                 sell_proceeds = shares_b * current_price
-                cap_b = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate)
+                cap_b = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate - slippage)
                 shares_b = 0
                 in_pos_b = False
                 valley_price = current_price
@@ -63,13 +68,18 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
         else:
             if current_price < valley_price: valley_price = current_price
             if current_price >= valley_price * (1 + buy_threshold):
-                cap_b = (cap_b / (1 + trading_fee_rate))
+                cap_b = (cap_b / (1 + trading_fee_rate + slippage))
                 shares_b = cap_b / current_price
                 cap_b = 0
                 in_pos_b = True
                 peak_price = current_price
                 trans_b += 1
-        history_b.append(cap_b + (shares_b * current_price))
+        
+        # 紀錄歷史價值 (若持有中，紀錄扣除預期清算後的價值)
+        current_val = cap_b
+        if in_pos_b:
+            current_val = (shares_b * current_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
+        history_b.append(current_val)
 
     # Strategy C: SMA 20 with 3-day cool-down
     df_c = df.copy()
@@ -89,7 +99,7 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
         else:
             if (i - last_trans_day_c) >= 3:
                 if current_price > current_sma and not in_pos_c:
-                    cap_c = (cap_c / (1 + trading_fee_rate))
+                    cap_c = (cap_c / (1 + trading_fee_rate + slippage))
                     shares_c = cap_c / current_price
                     cap_c = 0
                     in_pos_c = True
@@ -97,16 +107,19 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
                     last_trans_day_c = i
                 elif current_price < current_sma and in_pos_c:
                     sell_proceeds = shares_c * current_price
-                    cap_c = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate)
+                    cap_c = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate - slippage)
                     shares_c = 0
                     in_pos_c = False
                     trans_c += 1
                     last_trans_day_c = i
-        history_c.append(cap_c + (shares_c * current_price))
+        
+        current_val_c = cap_c
+        if in_pos_c:
+            current_val_c = (shares_c * current_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
+        history_c.append(current_val_c)
 
     # Strategy D: ATR Adaptive Volatility
     df_d = df.copy()
-    # ATR Calculation (14 days)
     high_low = df_d['High'] - df_d['Low']
     high_close = (df_d['High'] - df_d['Close'].shift()).abs()
     low_close = (df_d['Low'] - df_d['Close'].shift()).abs()
@@ -115,15 +128,14 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
     df_d['ATR'] = true_range.rolling(14).mean()
     
     cap_d = initial_capital
-    shares_d = (cap_d / (1 + trading_fee_rate)) / first_price
+    shares_d = (cap_d / (1 + trading_fee_rate + slippage)) / first_price
     cap_d = 0
     in_pos_d = True
     peak_price = first_price
     valley_price = first_price
-    
     history_d = []
     trans_d = 1
-    multiplier = 3.0 # ATR Multiplier
+    multiplier = 3.0
     
     for i, (idx, row) in enumerate(df_d.iterrows()):
         current_price = float(row['Close'])
@@ -133,12 +145,11 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
             pass
         else:
             dynamic_t = (current_atr * multiplier) / current_price
-            
             if in_pos_d:
                 if current_price > peak_price: peak_price = current_price
                 if current_price <= peak_price * (1 - dynamic_t):
                     sell_proceeds = shares_d * current_price
-                    cap_d = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate)
+                    cap_d = sell_proceeds * (1 - trading_fee_rate - sell_tax_rate - slippage)
                     shares_d = 0
                     in_pos_d = False
                     valley_price = current_price
@@ -146,23 +157,40 @@ def run_backtest(df, stock_code, buy_threshold=0.1, sell_threshold=0.1, initial_
             else:
                 if current_price < valley_price: valley_price = current_price
                 if current_price >= valley_price * (1 + dynamic_t):
-                    cap_d = (cap_d / (1 + trading_fee_rate))
+                    cap_d = (cap_d / (1 + trading_fee_rate + slippage))
                     shares_d = cap_d / current_price
                     cap_d = 0
                     in_pos_d = True
                     peak_price = current_price
                     trans_d += 1
-        history_d.append(cap_d + (shares_d * current_price))
+        
+        current_val_d = cap_d
+        if in_pos_d:
+            current_val_d = (shares_d * current_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
+        history_d.append(current_val_d)
+
+    # Final Net Values (Ensure everything is liquidated at the very end)
+    final_val_b = cap_b
+    if in_pos_b:
+        final_val_b = (shares_b * last_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
+        
+    final_val_c = cap_c
+    if in_pos_c:
+        final_val_c = (shares_c * last_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
+        
+    final_val_d = cap_d
+    if in_pos_d:
+        final_val_d = (shares_d * last_price) * (1 - trading_fee_rate - sell_tax_rate - slippage)
 
     return {
         'final_a': final_a,
-        'final_b': cap_b + (shares_b * last_price),
+        'final_b': final_val_b,
         'trans_b': trans_b,
         'history_b': history_b,
-        'final_c': cap_c + (shares_c * last_price),
+        'final_c': final_val_c,
         'trans_c': trans_c,
         'history_c': history_c,
-        'final_d': cap_d + (shares_d * last_price),
+        'final_d': final_val_d,
         'trans_d': trans_d,
         'history_d': history_d,
         'market': '台股' if is_taiwan else '美股/複委託',
@@ -294,7 +322,7 @@ def main():
             for st in thresholds:
                 res = run_backtest(df, stock_code=stock, buy_threshold=bt, sell_threshold=st)
                 roi = (res['final_b']/10000 - 1) * 100
-                matrix_data[bt][st] = roi
+                matrix_data[bt][st] = (roi, res['trans_b'])
                 if roi > best_roi_b:
                     best_roi_b = roi
                     best_buy_t = bt
@@ -304,8 +332,8 @@ def main():
         roi_a = (res_a['final_a']/10000 - 1) * 100
 
         # Construct Matrix Text for AI
-        matrix_header = "買\\賣 | " + " | ".join([f"{t*100:>3.0f}%" for t in thresholds])
-        matrix_divider = "-" * (8 + len(thresholds)*7)
+        matrix_header = "買\\賣 | " + " | ".join([f"{t*100:>7.0f}%" for t in thresholds])
+        matrix_divider = "-" * (8 + len(thresholds)*11)
         matrix_text = matrix_header + "\n" + matrix_divider + "\n"
         
         res_c = run_backtest(df, stock_code=stock)
@@ -314,7 +342,7 @@ def main():
         res_d = run_backtest(df, stock_code=stock)
         roi_d = (res_d['final_d']/10000 - 1) * 100
         
-        print("\n獲利矩陣 (獲利高原分析):")
+        print("\n獲利矩陣 (獲利高原分析) [格式: 報酬%(交易次數)]:")
         print(f"基準對照 Strategy A (長期持有): {roi_a:.1f}%")
         print(f"對手策略 Strategy C (月線趨勢): {roi_c:.1f}%")
         print(f"自適應策略 Strategy D (ATR 3.0): {roi_d:.1f}%")
@@ -325,9 +353,10 @@ def main():
         for bt in thresholds:
             row_str = f"{bt*100:>3.0f}%  | "
             for st in thresholds:
-                val = matrix_data[bt][st]
+                val, trans = matrix_data[bt][st]
                 mark = "*" if val > roi_a else " "
-                row_str += f"{val:>4.0f}%{mark}| "
+                cell = f"{val:>3.0f}%({trans:>2}){mark}"
+                row_str += f"{cell:<8}| "
             print(row_str)
             matrix_text += row_str + "\n"
         
