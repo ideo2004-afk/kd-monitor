@@ -95,6 +95,29 @@ def calculate_dynamic_trends(stock_name, data, drop_threshold, recovery_threshol
         return None
 
 # ===============================================
+# 函式 2: 發送 ntfy.sh 通知
+# ===============================================
+def send_ntfy_notification(topic, title, message):
+    """
+    發送通知到 ntfy.sh
+    """
+    print(f"\n正在發送 ntfy.sh 通知到主題: {topic}")
+    try:
+        response = requests.post(
+            f"https://ntfy.sh/{topic}",
+            data=message.encode('utf-8'), # 訊息本文，需編碼
+            headers={
+                "Title": title.encode('utf-8'), # 標題，也需編碼
+                "Priority": "high", # 設置高優先級 (可選)
+                "Tags": "chart_with_upwards_trend" # 顯示 📈 圖示 (可選)
+            }
+        )
+        response.raise_for_status() # 檢查是否有 HTTP 錯誤
+        print("ntfy 通知發送成功！")
+    except requests.exceptions.RequestException as e:
+        print(f"發送 ntfy 通知時發生錯誤: {e}")
+
+# ===============================================
 # --- 主程式入口 (v-config-file-github 版) ---
 # ===============================================
 def main():
