@@ -60,6 +60,9 @@ def calculate_dynamic_trends(stock_name, data, drop_threshold, recovery_threshol
     print(f"--- 正在計算: {stock_name} (閾值: {drop_threshold}%, {recovery_threshold}%) ---")
     
     try:
+        # 清理 NaN 資料 (例如開盤前抓到空行)
+        data = data.dropna()
+        
         if data.empty or len(data) < 2:
             return None
             
