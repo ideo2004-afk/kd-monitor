@@ -1,0 +1,104 @@
+{
+  "generated_at_utc": "2026-07-14T14:52:15.102669+00:00",
+  "note": "抓取當下的最新交易日資料；若美股尚未收盤，close 為盤中最新成交價，非正式收盤價",
+  "tickers": {
+    "TSM": {
+      "name": "台積電 ADR",
+      "price": 423.01,
+      "prev_close": 421.58,
+      "pct_change": 0.34,
+      "as_of_date": "2026-07-14"
+    },
+    "SMH": {
+      "name": "VanEck 半導體ETF",
+      "price": 598.03,
+      "prev_close": 585.62,
+      "pct_change": 2.12,
+      "as_of_date": "2026-07-14"
+    },
+    "NVDA": {
+      "name": "Nvidia",
+      "price": 207.05,
+      "prev_close": 203.53,
+      "pct_change": 1.73,
+      "as_of_date": "2026-07-14"
+    },
+    "AVGO": {
+      "name": "Broadcom",
+      "price": 395.57,
+      "prev_close": 384.05,
+      "pct_change": 3.0,
+      "as_of_date": "2026-07-14"
+    },
+    "AMD": {
+      "name": "AMD",
+      "price": 551.94,
+      "prev_close": 534.39,
+      "pct_change": 3.28,
+      "as_of_date": "2026-07-14"
+    },
+    "MU": {
+      "name": "美光",
+      "price": 965.15,
+      "prev_close": 937.0,
+      "pct_change": 3.0,
+      "as_of_date": "2026-07-14"
+    },
+    "ASML": {
+      "name": "ASML",
+      "price": 1768.49,
+      "prev_close": 1726.04,
+      "pct_change": 2.46,
+      "as_of_date": "2026-07-14"
+    },
+    "AMAT": {
+      "name": "應用材料",
+      "price": 593.53,
+      "prev_close": 575.39,
+      "pct_change": 3.15,
+      "as_of_date": "2026-07-14"
+    },
+    "LRCX": {
+      "name": "Lam Research",
+      "price": 343.28,
+      "prev_close": 329.92,
+      "pct_change": 4.05,
+      "as_of_date": "2026-07-14"
+    },
+    "KLAC": {
+      "name": "KLA",
+      "price": 230.25,
+      "prev_close": 222.25,
+      "pct_change": 3.6,
+      "as_of_date": "2026-07-14"
+    },
+    "INTC": {
+      "name": "Intel",
+      "price": 104.59,
+      "prev_close": 103.12,
+      "pct_change": 1.43,
+      "as_of_date": "2026-07-14"
+    },
+    "GEV": {
+      "name": "GE Vernova",
+      "price": 1075.07,
+      "prev_close": 1042.6,
+      "pct_change": 3.11,
+      "as_of_date": "2026-07-14"
+    },
+    "VRT": {
+      "name": "Vertiv",
+      "price": 305.58,
+      "prev_close": 305.87,
+      "pct_change": -0.09,
+      "as_of_date": "2026-07-14"
+    },
+    "ANET": {
+      "name": "Arista Networks",
+      "price": 183.94,
+      "prev_close": 181.15,
+      "pct_change": 1.54,
+      "as_of_date": "2026-07-14"
+    }
+  }
+}
