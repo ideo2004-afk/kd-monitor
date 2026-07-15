@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 TICKERS = {
     "TSM": "台積電 ADR",
     "SMH": "VanEck 半導體ETF",
+    "GOOGL": "Google",
     "NVDA": "Nvidia",
     "AVGO": "Broadcom",
     "AMD": "AMD",
