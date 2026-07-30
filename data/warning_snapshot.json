@@ -1,110 +1,110 @@
 {
-  "generated_at_utc": "2026-07-30T14:08:34.485231+00:00",
+  "generated_at_utc": "2026-07-30T15:35:29.884506+00:00",
   "note": "抓取當下的最新交易日資料；若美股尚未收盤，close 為盤中最新成交價，非正式收盤價",
   "tickers": {
     "TSM": {
       "name": "台積電 ADR",
-      "price": 399.2,
+      "price": 399.79,
       "prev_close": 374.67,
-      "pct_change": 6.55,
+      "pct_change": 6.7,
       "as_of_date": "2026-07-30"
     },
     "SMH": {
       "name": "VanEck 半導體ETF",
-      "price": 535.45,
+      "price": 536.67,
       "prev_close": 504.22,
-      "pct_change": 6.19,
+      "pct_change": 6.44,
       "as_of_date": "2026-07-30"
     },
     "GOOGL": {
       "name": "Google",
-      "price": 334.16,
+      "price": 332.12,
       "prev_close": 336.71,
-      "pct_change": -0.76,
+      "pct_change": -1.36,
       "as_of_date": "2026-07-30"
     },
     "NVDA": {
       "name": "Nvidia",
-      "price": 195.32,
+      "price": 193.47,
       "prev_close": 190.01,
-      "pct_change": 2.8,
+      "pct_change": 1.82,
       "as_of_date": "2026-07-30"
     },
     "AVGO": {
       "name": "Broadcom",
-      "price": 384.12,
+      "price": 383.7,
       "prev_close": 370.32,
-      "pct_change": 3.73,
+      "pct_change": 3.61,
       "as_of_date": "2026-07-30"
     },
     "AMD": {
       "name": "AMD",
-      "price": 482.48,
+      "price": 484.32,
       "prev_close": 429.56,
-      "pct_change": 12.32,
+      "pct_change": 12.75,
       "as_of_date": "2026-07-30"
     },
     "MU": {
       "name": "美光",
-      "price": 823.27,
+      "price": 850.95,
       "prev_close": 739.0,
-      "pct_change": 11.4,
+      "pct_change": 15.15,
       "as_of_date": "2026-07-30"
     },
     "ASML": {
       "name": "ASML",
-      "price": 1656.85,
+      "price": 1658.35,
       "prev_close": 1550.69,
-      "pct_change": 6.85,
+      "pct_change": 6.94,
       "as_of_date": "2026-07-30"
     },
     "AMAT": {
       "name": "應用材料",
-      "price": 497.71,
+      "price": 498.98,
       "prev_close": 436.45,
-      "pct_change": 14.04,
+      "pct_change": 14.33,
       "as_of_date": "2026-07-30"
     },
     "LRCX": {
       "name": "Lam Research",
-      "price": 301.1,
+      "price": 301.19,
       "prev_close": 252.35,
-      "pct_change": 19.32,
+      "pct_change": 19.35,
       "as_of_date": "2026-07-30"
     },
     "KLAC": {
       "name": "KLA",
-      "price": 183.13,
+      "price": 183.79,
       "prev_close": 170.19,
-      "pct_change": 7.6,
+      "pct_change": 7.99,
       "as_of_date": "2026-07-30"
     },
     "INTC": {
       "name": "Intel",
-      "price": 90.65,
+      "price": 92.62,
       "prev_close": 81.88,
-      "pct_change": 10.71,
+      "pct_change": 13.12,
       "as_of_date": "2026-07-30"
     },
     "GEV": {
       "name": "GE Vernova",
-      "price": 973.92,
+      "price": 966.34,
       "prev_close": 900.28,
-      "pct_change": 8.18,
+      "pct_change": 7.34,
       "as_of_date": "2026-07-30"
     },
     "VRT": {
       "name": "Vertiv",
-      "price": 233.02,
+      "price": 229.26,
       "prev_close": 223.04,
-      "pct_change": 4.47,
+      "pct_change": 2.79,
       "as_of_date": "2026-07-30"
     },
     "ANET": {
       "name": "Arista Networks",
-      "price": 168.95,
+      "price": 169.28,
       "prev_close": 157.97,
-      "pct_change": 6.95,
+      "pct_change": 7.16,
       "as_of_date": "2026-07-30"
     }
   },
