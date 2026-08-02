@@ -1,110 +1,110 @@
 {
-  "generated_at_utc": "2026-07-31T15:48:49.998106+00:00",
+  "generated_at_utc": "2026-08-02T11:04:10.919017+00:00",
   "note": "抓取當下的最新交易日資料；若美股尚未收盤，close 為盤中最新成交價，非正式收盤價",
   "tickers": {
     "TSM": {
       "name": "台積電 ADR",
-      "price": 405.13,
+      "price": 404.25,
       "prev_close": 403.31,
-      "pct_change": 0.45,
+      "pct_change": 0.23,
       "as_of_date": "2026-07-31"
     },
     "SMH": {
       "name": "VanEck 半導體ETF",
-      "price": 539.51,
+      "price": 540.53,
       "prev_close": 538.9,
-      "pct_change": 0.11,
+      "pct_change": 0.3,
       "as_of_date": "2026-07-31"
     },
     "GOOGL": {
       "name": "Google",
-      "price": 349.3,
+      "price": 356.13,
       "prev_close": 333.66,
-      "pct_change": 4.69,
+      "pct_change": 6.73,
       "as_of_date": "2026-07-31"
     },
     "NVDA": {
       "name": "Nvidia",
-      "price": 195.9,
+      "price": 200.75,
       "prev_close": 195.04,
-      "pct_change": 0.44,
+      "pct_change": 2.93,
       "as_of_date": "2026-07-31"
     },
     "AVGO": {
       "name": "Broadcom",
-      "price": 384.95,
+      "price": 389.28,
       "prev_close": 387.84,
-      "pct_change": -0.75,
+      "pct_change": 0.37,
       "as_of_date": "2026-07-31"
     },
     "AMD": {
       "name": "AMD",
-      "price": 486.6,
+      "price": 476.15,
       "prev_close": 485.39,
-      "pct_change": 0.25,
+      "pct_change": -1.9,
       "as_of_date": "2026-07-31"
     },
     "MU": {
       "name": "美光",
-      "price": 820.53,
+      "price": 823.03,
       "prev_close": 874.66,
-      "pct_change": -6.19,
+      "pct_change": -5.9,
       "as_of_date": "2026-07-31"
     },
     "ASML": {
       "name": "ASML",
-      "price": 1643.66,
+      "price": 1629.0,
       "prev_close": 1651.44,
-      "pct_change": -0.47,
+      "pct_change": -1.36,
       "as_of_date": "2026-07-31"
     },
     "AMAT": {
       "name": "應用材料",
-      "price": 510.23,
+      "price": 507.67,
       "prev_close": 501.77,
-      "pct_change": 1.69,
+      "pct_change": 1.18,
       "as_of_date": "2026-07-31"
     },
     "LRCX": {
       "name": "Lam Research",
-      "price": 298.41,
+      "price": 293.02,
       "prev_close": 297.72,
-      "pct_change": 0.23,
+      "pct_change": -1.58,
       "as_of_date": "2026-07-31"
     },
     "KLAC": {
       "name": "KLA",
-      "price": 184.51,
+      "price": 182.82,
       "prev_close": 180.33,
-      "pct_change": 2.32,
+      "pct_change": 1.38,
       "as_of_date": "2026-07-31"
     },
     "INTC": {
       "name": "Intel",
-      "price": 91.89,
+      "price": 90.2,
       "prev_close": 91.13,
-      "pct_change": 0.83,
+      "pct_change": -1.02,
       "as_of_date": "2026-07-31"
     },
     "GEV": {
       "name": "GE Vernova",
-      "price": 990.2,
+      "price": 990.29,
       "prev_close": 981.98,
-      "pct_change": 0.84,
+      "pct_change": 0.85,
       "as_of_date": "2026-07-31"
     },
     "VRT": {
       "name": "Vertiv",
-      "price": 241.29,
+      "price": 241.57,
       "prev_close": 227.5,
-      "pct_change": 6.06,
+      "pct_change": 6.18,
       "as_of_date": "2026-07-31"
     },
     "ANET": {
       "name": "Arista Networks",
-      "price": 177.31,
+      "price": 180.35,
       "prev_close": 171.02,
-      "pct_change": 3.68,
+      "pct_change": 5.46,
       "as_of_date": "2026-07-31"
     }
   },
@@ -172,10 +172,10 @@
         },
         {
           "date": "07/31",
-          "open": 558.23
+          "open": 557.5
         }
       ],
-      "week_pct_change": -3.29
+      "week_pct_change": -3.41
     },
     "GOOGL": {
       "name": "Google",
@@ -206,10 +206,10 @@
         },
         {
           "date": "07/31",
-          "open": 341.5
+          "open": 340.83
         }
       ],
-      "week_pct_change": 6.34
+      "week_pct_change": 6.13
     },
     "INTC": {
       "name": "Intel",
@@ -244,6 +244,340 @@
         }
       ],
       "week_pct_change": -4.37
+    }
+  },
+  "weekly_ma_analysis": {
+    "TSM": {
+      "name": "台積電 ADR",
+      "points": [
+        {
+          "week_end": "2026-03-16",
+          "close": 328.47,
+          "ma10": 345.77,
+          "ma10_distance_pct": -5.0,
+          "ma60": 341.47,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-03-23",
+          "close": 325.98,
+          "ma10": 344.3,
+          "ma10_distance_pct": -5.32,
+          "ma60": 342.13,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-03-30",
+          "close": 338.25,
+          "ma10": 344.81,
+          "ma10_distance_pct": -1.9,
+          "ma60": 343.49,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-04-06",
+          "close": 369.73,
+          "ma10": 348.9,
+          "ma10_distance_pct": 5.97,
+          "ma60": 345.92,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-04-13",
+          "close": 369.63,
+          "ma10": 351.16,
+          "ma10_distance_pct": 5.26,
+          "ma60": 348.96,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-04-20",
+          "close": 401.52,
+          "ma10": 354.86,
+          "ma10_distance_pct": 13.15,
+          "ma60": 355.01,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-04-27",
+          "close": 396.74,
+          "ma10": 357.67,
+          "ma10_distance_pct": 10.92,
+          "ma60": 359.15,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-05-04",
+          "close": 410.72,
+          "ma10": 361.48,
+          "ma10_distance_pct": 13.62,
+          "ma60": 363.0,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-05-11",
+          "close": 403.41,
+          "ma10": 368.1,
+          "ma10_distance_pct": 9.59,
+          "ma60": 365.9,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-05-18",
+          "close": 403.57,
+          "ma10": 374.8,
+          "ma10_distance_pct": 7.68,
+          "ma60": 368.48,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-05-25",
+          "close": 417.47,
+          "ma10": 383.7,
+          "ma10_distance_pct": 8.8,
+          "ma60": 375.17,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-01",
+          "close": 414.2,
+          "ma10": 392.52,
+          "ma10_distance_pct": 5.52,
+          "ma60": 381.64,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-08",
+          "close": 423.93,
+          "ma10": 401.09,
+          "ma10_distance_pct": 5.69,
+          "ma60": 389.6,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-15",
+          "close": 462.12,
+          "ma10": 410.33,
+          "ma10_distance_pct": 12.62,
+          "ma60": 400.94,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-22",
+          "close": 432.35,
+          "ma10": 416.6,
+          "ma10_distance_pct": 3.78,
+          "ma60": 408.78,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-29",
+          "close": 434.16,
+          "ma10": 419.87,
+          "ma10_distance_pct": 3.4,
+          "ma60": 414.15,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-07-06",
+          "close": 434.11,
+          "ma10": 423.6,
+          "ma10_distance_pct": 2.48,
+          "ma60": 419.53,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-07-13",
+          "close": 398.37,
+          "ma10": 422.37,
+          "ma10_distance_pct": -5.68,
+          "ma60": 419.26,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-07-20",
+          "close": 403.41,
+          "ma10": 422.37,
+          "ma10_distance_pct": -4.49,
+          "ma60": 419.82,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-07-27",
+          "close": 404.25,
+          "ma10": 422.44,
+          "ma10_distance_pct": -4.31,
+          "ma60": 419.28,
+          "above_ma60": false
+        }
+      ],
+      "consecutive_weeks_below_ma10": 3
+    },
+    "SMH": {
+      "name": "VanEck 半導體ETF",
+      "points": [
+        {
+          "week_end": "2026-03-16",
+          "close": 384.74,
+          "ma10": 398.73,
+          "ma10_distance_pct": -3.51,
+          "ma60": 395.82,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-03-23",
+          "close": 374.25,
+          "ma10": 396.12,
+          "ma10_distance_pct": -5.52,
+          "ma60": 395.9,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-03-30",
+          "close": 392.32,
+          "ma10": 395.34,
+          "ma10_distance_pct": -0.76,
+          "ma60": 396.16,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-04-06",
+          "close": 436.88,
+          "ma10": 398.68,
+          "ma10_distance_pct": 9.58,
+          "ma60": 399.2,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-04-13",
+          "close": 464.16,
+          "ma10": 404.94,
+          "ma10_distance_pct": 14.63,
+          "ma60": 404.54,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-04-20",
+          "close": 506.44,
+          "ma10": 414.81,
+          "ma10_distance_pct": 22.09,
+          "ma60": 413.12,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-04-27",
+          "close": 509.82,
+          "ma10": 424.29,
+          "ma10_distance_pct": 20.16,
+          "ma60": 422.13,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-05-04",
+          "close": 566.54,
+          "ma10": 440.3,
+          "ma10_distance_pct": 28.67,
+          "ma60": 435.37,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-05-11",
+          "close": 556.34,
+          "ma10": 457.88,
+          "ma10_distance_pct": 21.5,
+          "ma60": 447.15,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-05-18",
+          "close": 576.32,
+          "ma10": 476.78,
+          "ma10_distance_pct": 20.88,
+          "ma60": 461.31,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-05-25",
+          "close": 598.93,
+          "ma10": 498.2,
+          "ma10_distance_pct": 20.22,
+          "ma60": 479.51,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-01",
+          "close": 569.69,
+          "ma10": 517.74,
+          "ma10_distance_pct": 10.03,
+          "ma60": 494.7,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-08",
+          "close": 619.96,
+          "ma10": 540.51,
+          "ma10_distance_pct": 14.7,
+          "ma60": 514.3,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-15",
+          "close": 659.88,
+          "ma10": 562.81,
+          "ma10_distance_pct": 17.25,
+          "ma60": 538.11,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-22",
+          "close": 611.61,
+          "ma10": 577.55,
+          "ma10_distance_pct": 5.9,
+          "ma60": 556.38,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-06-29",
+          "close": 592.29,
+          "ma10": 586.14,
+          "ma10_distance_pct": 1.05,
+          "ma60": 569.33,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-07-06",
+          "close": 611.03,
+          "ma10": 596.26,
+          "ma10_distance_pct": 2.48,
+          "ma60": 581.57,
+          "above_ma60": true
+        },
+        {
+          "week_end": "2026-07-13",
+          "close": 556.53,
+          "ma10": 595.26,
+          "ma10_distance_pct": -6.51,
+          "ma60": 585.75,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-07-20",
+          "close": 561.19,
+          "ma10": 595.74,
+          "ma10_distance_pct": -5.8,
+          "ma60": 590.03,
+          "above_ma60": false
+        },
+        {
+          "week_end": "2026-07-27",
+          "close": 540.53,
+          "ma10": 592.16,
+          "ma10_distance_pct": -8.72,
+          "ma60": 587.86,
+          "above_ma60": false
+        }
+      ],
+      "consecutive_weeks_below_ma10": 3
     }
   }
 }
