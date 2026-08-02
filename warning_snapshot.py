@@ -32,6 +32,9 @@ TICKERS = {
 # 四大核心持股：儀表板頂部週開盤價走勢圖用
 CORE_HOLDINGS = ["TSM", "SMH", "GOOGL", "INTC"]
 
+# 陰跌尺/回補尺B軌需要的週線+均線分析：僅 TSM/SMH（減碼階梯核心追蹤標的）
+WEEKLY_MA_TICKERS = ["TSM", "SMH"]
+
 
 def weekly_opens(ticker, days=7):
     """抓最近 N 個交易日的開盤價。yfinance 的日線只回傳有成交的交易日,
@@ -44,6 +47,40 @@ def weekly_opens(ticker, days=7):
         {"date": idx.strftime("%m/%d"), "open": round(float(row["Open"]), 2)}
         for idx, row in tail.iterrows()
     ]
+
+
+def weekly_ma_analysis(ticker, out_weeks=20):
+    """抓週線收盤價，算10週均線(陰跌尺加權合成距離用)與12週均線(≈60個交易日的季線MA60,
+    回補尺B軌用)。取代原本 mempalace-zh 那邊用 WebFetch 直接打 Yahoo Finance 圖表 API 的作法——
+    這條資料改由 GitHub Actions 抓取、跟每日快照一樣用 git push 帶回去，不受任何 session 的
+    出口網路政策影響，也不用使用者手動截圖。"""
+    hist = yf.Ticker(ticker).history(period="1y", interval="1wk")
+    hist = hist.dropna(subset=["Close"])
+    hist["ma10"] = hist["Close"].rolling(window=10).mean()
+    hist["ma60"] = hist["Close"].rolling(window=12).mean()
+
+    points = []
+    for idx, row in hist.tail(out_weeks).iterrows():
+        close = float(row["Close"])
+        ma10 = float(row["ma10"]) if row["ma10"] == row["ma10"] else None
+        ma60 = float(row["ma60"]) if row["ma60"] == row["ma60"] else None
+        points.append({
+            "week_end": idx.strftime("%Y-%m-%d"),
+            "close": round(close, 2),
+            "ma10": round(ma10, 2) if ma10 is not None else None,
+            "ma10_distance_pct": round((close - ma10) / ma10 * 100, 2) if ma10 else None,
+            "ma60": round(ma60, 2) if ma60 is not None else None,
+            "above_ma60": (close > ma60) if ma60 is not None else None,
+        })
+
+    consecutive_weeks_below_ma10 = 0
+    for p in reversed(points):
+        if p["ma10_distance_pct"] is not None and p["ma10_distance_pct"] < 0:
+            consecutive_weeks_below_ma10 += 1
+        else:
+            break
+
+    return points, consecutive_weeks_below_ma10
 
 
 def main():
@@ -87,6 +124,18 @@ def main():
             }
         except Exception as e:
             snapshot["core_holdings_weekly_open"][t] = {"name": TICKERS.get(t, t), "error": str(e)}
+
+    snapshot["weekly_ma_analysis"] = {}
+    for t in WEEKLY_MA_TICKERS:
+        try:
+            points, streak = weekly_ma_analysis(t)
+            snapshot["weekly_ma_analysis"][t] = {
+                "name": TICKERS[t],
+                "points": points,
+                "consecutive_weeks_below_ma10": streak,
+            }
+        except Exception as e:
+            snapshot["weekly_ma_analysis"][t] = {"name": TICKERS.get(t, t), "error": str(e)}
 
     os.makedirs("data", exist_ok=True)
     with open("data/warning_snapshot.json", "w", encoding="utf-8") as f:
