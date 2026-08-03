@@ -53,28 +53,40 @@ def weekly_ma_analysis(ticker, out_weeks=20):
     """抓週線收盤價，算10週均線(陰跌尺加權合成距離用)與12週均線(≈60個交易日的季線MA60,
     回補尺B軌用)。取代原本 mempalace-zh 那邊用 WebFetch 直接打 Yahoo Finance 圖表 API 的作法——
     這條資料改由 GitHub Actions 抓取、跟每日快照一樣用 git push 帶回去，不受任何 session 的
-    出口網路政策影響，也不用使用者手動截圖。"""
+    出口網路政策影響，也不用使用者手動截圖。
+
+    注意：yfinance 週線的索引日期是該週的「起始日」(通常是週一)，不是收盤日；查詢當下若該週
+    尚未收盤(週一到週四查詢)，最後一筆是「本週進行中」的暫時值，不是真正的週收盤，2026-08-03
+    掃描發現此問題——若不排除會讓「連續N週跌破10週均線」的計數提前多算一週，回補尺/L4判準需要
+    的是「已收盤」的完整週數，故 is_week_closed 明確標記、consecutive_weeks_below_ma10 的計算
+    排除最後一筆進行中的週。"""
     hist = yf.Ticker(ticker).history(period="1y", interval="1wk")
     hist = hist.dropna(subset=["Close"])
     hist["ma10"] = hist["Close"].rolling(window=10).mean()
     hist["ma60"] = hist["Close"].rolling(window=12).mean()
 
+    tail = hist.tail(out_weeks)
+    last_idx = tail.index[-1] if len(tail) else None
+
     points = []
-    for idx, row in hist.tail(out_weeks).iterrows():
+    for idx, row in tail.iterrows():
         close = float(row["Close"])
         ma10 = float(row["ma10"]) if row["ma10"] == row["ma10"] else None
         ma60 = float(row["ma60"]) if row["ma60"] == row["ma60"] else None
         points.append({
-            "week_end": idx.strftime("%Y-%m-%d"),
+            "week_start": idx.strftime("%Y-%m-%d"),
             "close": round(close, 2),
             "ma10": round(ma10, 2) if ma10 is not None else None,
             "ma10_distance_pct": round((close - ma10) / ma10 * 100, 2) if ma10 else None,
             "ma60": round(ma60, 2) if ma60 is not None else None,
             "above_ma60": (close > ma60) if ma60 is not None else None,
+            "is_week_closed": idx != last_idx,
         })
 
     consecutive_weeks_below_ma10 = 0
     for p in reversed(points):
+        if not p["is_week_closed"]:
+            continue
         if p["ma10_distance_pct"] is not None and p["ma10_distance_pct"] < 0:
             consecutive_weeks_below_ma10 += 1
         else:
