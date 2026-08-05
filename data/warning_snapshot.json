@@ -1,121 +1,117 @@
 {
-  "generated_at_utc": "2026-08-04T16:01:26.580307+00:00",
+  "generated_at_utc": "2026-08-05T14:13:14.717129+00:00",
   "note": "抓取當下的最新交易日資料；若美股尚未收盤，close 為盤中最新成交價，非正式收盤價",
   "tickers": {
     "TSM": {
       "name": "台積電 ADR",
-      "price": 415.8,
-      "prev_close": 406.11,
-      "pct_change": 2.39,
-      "as_of_date": "2026-08-04"
+      "price": 419.83,
+      "prev_close": 417.17,
+      "pct_change": 0.64,
+      "as_of_date": "2026-08-05"
     },
     "SMH": {
       "name": "VanEck 半導體ETF",
-      "price": 573.21,
-      "prev_close": 545.46,
-      "pct_change": 5.09,
-      "as_of_date": "2026-08-04"
+      "price": 579.87,
+      "prev_close": 575.71,
+      "pct_change": 0.72,
+      "as_of_date": "2026-08-05"
     },
     "GOOGL": {
       "name": "Google",
-      "price": 376.13,
-      "prev_close": 373.51,
-      "pct_change": 0.7,
-      "as_of_date": "2026-08-04"
+      "price": 378.92,
+      "prev_close": 377.65,
+      "pct_change": 0.34,
+      "as_of_date": "2026-08-05"
     },
     "NVDA": {
       "name": "Nvidia",
-      "price": 210.61,
-      "prev_close": 206.64,
-      "pct_change": 1.92,
-      "as_of_date": "2026-08-04"
+      "price": 221.79,
+      "prev_close": 211.94,
+      "pct_change": 4.65,
+      "as_of_date": "2026-08-05"
     },
     "AVGO": {
       "name": "Broadcom",
-      "price": 416.45,
-      "prev_close": 392.23,
-      "pct_change": 6.17,
-      "as_of_date": "2026-08-04"
+      "price": 423.17,
+      "prev_close": 418.16,
+      "pct_change": 1.2,
+      "as_of_date": "2026-08-05"
     },
     "AMD": {
       "name": "AMD",
-      "price": 523.67,
-      "prev_close": 484.64,
-      "pct_change": 8.05,
-      "as_of_date": "2026-08-04"
+      "price": 489.76,
+      "prev_close": 518.58,
+      "pct_change": -5.56,
+      "as_of_date": "2026-08-05"
     },
     "MU": {
       "name": "美光",
-      "price": 894.52,
-      "prev_close": 829.5,
-      "pct_change": 7.84,
-      "as_of_date": "2026-08-04"
+      "price": 920.31,
+      "prev_close": 892.67,
+      "pct_change": 3.1,
+      "as_of_date": "2026-08-05"
     },
     "ASML": {
       "name": "ASML",
-      "price": 1698.79,
-      "prev_close": 1642.52,
-      "pct_change": 3.43,
-      "as_of_date": "2026-08-04"
+      "price": 1708.4,
+      "prev_close": 1711.89,
+      "pct_change": -0.2,
+      "as_of_date": "2026-08-05"
     },
     "AMAT": {
       "name": "應用材料",
-      "price": 545.78,
-      "prev_close": 518.21,
-      "pct_change": 5.32,
-      "as_of_date": "2026-08-04"
+      "price": 545.97,
+      "prev_close": 546.62,
+      "pct_change": -0.12,
+      "as_of_date": "2026-08-05"
     },
     "LRCX": {
       "name": "Lam Research",
-      "price": 313.99,
-      "prev_close": 294.61,
-      "pct_change": 6.58,
-      "as_of_date": "2026-08-04"
+      "price": 316.47,
+      "prev_close": 317.74,
+      "pct_change": -0.4,
+      "as_of_date": "2026-08-05"
     },
     "KLAC": {
       "name": "KLA",
-      "price": 194.68,
-      "prev_close": 182.75,
-      "pct_change": 6.53,
-      "as_of_date": "2026-08-04"
+      "price": 197.23,
+      "prev_close": 195.45,
+      "pct_change": 0.91,
+      "as_of_date": "2026-08-05"
     },
     "INTC": {
       "name": "Intel",
-      "price": 99.85,
-      "prev_close": 91.0,
-      "pct_change": 9.73,
-      "as_of_date": "2026-08-04"
+      "price": 100.11,
+      "prev_close": 100.86,
+      "pct_change": -0.74,
+      "as_of_date": "2026-08-05"
     },
     "GEV": {
       "name": "GE Vernova",
-      "price": 1016.49,
-      "prev_close": 1006.76,
-      "pct_change": 0.97,
-      "as_of_date": "2026-08-04"
+      "price": 1029.44,
+      "prev_close": 1018.53,
+      "pct_change": 1.07,
+      "as_of_date": "2026-08-05"
     },
     "VRT": {
       "name": "Vertiv",
-      "price": 274.3,
-      "prev_close": 263.05,
-      "pct_change": 4.28,
-      "as_of_date": "2026-08-04"
+      "price": 278.2,
+      "prev_close": 269.93,
+      "pct_change": 3.07,
+      "as_of_date": "2026-08-05"
     },
     "ANET": {
       "name": "Arista Networks",
-      "price": 193.62,
-      "prev_close": 184.89,
-      "pct_change": 4.72,
-      "as_of_date": "2026-08-04"
+      "price": 194.94,
+      "prev_close": 190.51,
+      "pct_change": 2.33,
+      "as_of_date": "2026-08-05"
     }
   },
   "core_holdings_weekly_open": {
     "TSM": {
       "name": "台積電 ADR",
       "points": [
-        {
-          "date": "07/27",
-          "open": 406.08
-        },
         {
           "date": "07/28",
           "open": 385.0
@@ -139,17 +135,17 @@
         {
           "date": "08/04",
           "open": 418.0
+        },
+        {
+          "date": "08/05",
+          "open": 419.32
         }
       ],
-      "week_pct_change": 2.94
+      "week_pct_change": 8.91
     },
     "SMH": {
       "name": "VanEck 半導體ETF",
       "points": [
-        {
-          "date": "07/27",
-          "open": 565.94
-        },
         {
           "date": "07/28",
           "open": 531.65
@@ -173,17 +169,17 @@
         {
           "date": "08/04",
           "open": 564.29
+        },
+        {
+          "date": "08/05",
+          "open": 574.41
         }
       ],
-      "week_pct_change": -0.29
+      "week_pct_change": 8.04
     },
     "GOOGL": {
       "name": "Google",
       "points": [
-        {
-          "date": "07/27",
-          "open": 325.04
-        },
         {
           "date": "07/28",
           "open": 327.9
@@ -206,18 +202,18 @@
         },
         {
           "date": "08/04",
-          "open": 367.65
+          "open": 368.22
+        },
+        {
+          "date": "08/05",
+          "open": 382.94
         }
       ],
-      "week_pct_change": 13.11
+      "week_pct_change": 16.79
     },
     "INTC": {
       "name": "Intel",
       "points": [
-        {
-          "date": "07/27",
-          "open": 92.46
-        },
         {
           "date": "07/28",
           "open": 86.62
@@ -240,10 +236,14 @@
         },
         {
           "date": "08/04",
-          "open": 95.32
+          "open": 95.24
+        },
+        {
+          "date": "08/05",
+          "open": 99.57
         }
       ],
-      "week_pct_change": 3.09
+      "week_pct_change": 14.95
     }
   },
   "weekly_ma_analysis": {
@@ -423,10 +423,10 @@
         },
         {
           "week_start": "2026-08-03",
-          "close": 415.8,
-          "ma10": 422.27,
-          "ma10_distance_pct": -1.53,
-          "ma60": 420.31,
+          "close": 420.05,
+          "ma10": 422.7,
+          "ma10_distance_pct": -0.62,
+          "ma60": 420.67,
           "above_ma60": false,
           "is_week_closed": false
         }
@@ -609,10 +609,10 @@
         },
         {
           "week_start": "2026-08-03",
-          "close": 573.21,
-          "ma10": 589.59,
-          "ma10_distance_pct": -2.78,
-          "ma60": 589.26,
+          "close": 579.87,
+          "ma10": 590.26,
+          "ma10_distance_pct": -1.76,
+          "ma60": 589.82,
           "above_ma60": false,
           "is_week_closed": false
         }
